@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec node /Volumes/Dev/telegram-cli/dist/cli.mjs "$@"

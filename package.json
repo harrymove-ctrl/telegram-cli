@@ -1,0 +1,49 @@
+{
+  "name": "@harrymove-ctrl/telegram-cli",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Personal Telegram CLI for AI agents built with incur and mtcute",
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harrymove-ctrl/telegram-cli.git"
+  },
+  "files": [
+    "dist",
+    "bin",
+    "README.md"
+  ],
+  "bin": {
+    "telegram": "./dist/cli.mjs",
+    "tg": "./dist/cli.mjs"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "node --import tsx/esm src/cli.ts",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "node --test tests/smoke.test.mjs",
+    "format": "prettier --write .",
+    "prepack": "pnpm build",
+    "pack:check": "npm --cache .npm-cache pack --json"
+  },
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "dependencies": {
+    "@mtcute/wasm": "^0.32.0",
+    "better-sqlite3": "^13.0.3"
+  },
+  "devDependencies": {
+    "@mtcute/node": "^0.32.0",
+    "@types/node": "^25.6.0",
+    "dotenv": "^17.4.2",
+    "incur": "^0.4.6",
+    "prettier": "^3.8.3",
+    "tsdown": "^0.21.8",
+    "tsx": "^4.23.12",
+    "typescript": "^6.0.2",
+    "zod": "4.6.7"
+  }
+}
