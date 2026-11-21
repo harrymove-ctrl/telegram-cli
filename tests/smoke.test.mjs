@@ -39,6 +39,12 @@ test('telegram status runs offline without exposing raw credentials', async () =
   assert.equal(typeof parsed.hasStoredConfig, 'boolean')
   assert.equal(typeof parsed.hasEnvCredentials, 'boolean')
   assert.equal(typeof parsed.hasSessionFile, 'boolean')
+  assert.equal(typeof parsed.hasAuthenticatedSession, 'boolean')
+  assert.ok(
+    ['AUTHENTICATED', 'INCOMPLETE_AUTH_KEY_ONLY', 'MISSING'].includes(
+      parsed.sessionState,
+    ),
+  )
   assert.equal(typeof parsed.readOnly, 'boolean')
   assert.equal('apiHash' in parsed, false)
   assert.equal('apiId' in parsed, false)

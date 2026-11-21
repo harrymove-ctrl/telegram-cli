@@ -15,8 +15,12 @@ import {
   getClient,
 } from './client.js'
 
-export async function auth(options?: { force?: boolean; readOnly?: boolean }) {
-  const tg = await authClient({ forceLogin: options?.force })
+export async function auth(options?: {
+  force?: boolean
+  readOnly?: boolean
+  qr?: boolean
+}) {
+  const tg = await authClient({ forceLogin: options?.force, qr: options?.qr })
   const me = await getMe(tg)
   const readOnly = Boolean(options?.readOnly)
   await setReadOnly(readOnly)

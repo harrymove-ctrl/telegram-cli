@@ -1,4 +1,5 @@
 import { readFile, stat } from 'node:fs/promises'
+import { createRequire } from 'node:module'
 
 import { iterHistory, searchMessages } from '@mtcute/node/methods.js'
 
@@ -32,6 +33,36 @@ async function hasValidStoredConfig(configFile: string): Promise<boolean> {
   }
 }
 
+interface SqliteReadonlyHandle {
+  prepare(sql: string): { get(): { ok?: number } | undefined }
+  close(): void
+}
+
+const requireCjs = createRequire(import.meta.url)
+
+function hasAuthenticatedSelfRow(storageFile: string): boolean {
+  let db: SqliteReadonlyHandle | null = null
+  try {
+    const BetterSqlite3 = requireCjs('better-sqlite3') as new (
+      file: string,
+      opts: { readonly: boolean; fileMustExist: boolean },
+    ) => SqliteReadonlyHandle
+    db = new BetterSqlite3(storageFile, { readonly: true, fileMustExist: true })
+    const row = db
+      .prepare("SELECT 1 AS ok FROM key_value WHERE key = 'self' LIMIT 1")
+      .get()
+    return Boolean(row?.ok)
+  } catch {
+    return false
+  } finally {
+    try {
+      db?.close()
+    } catch {
+      // Ignore close error on readonly probe
+    }
+  }
+}
+
 export async function getStatus() {
   const configFile = getConfigFile()
   const storageFile = getStorageFile()
@@ -40,6 +71,14 @@ export async function getStatus() {
     hasFile(storageFile),
     isReadOnly(),
   ])
+  const hasAuthenticatedSession = hasSessionFile
+    ? hasAuthenticatedSelfRow(storageFile)
+    : false
+  const sessionState = hasAuthenticatedSession
+    ? 'AUTHENTICATED'
+    : hasSessionFile
+      ? 'INCOMPLETE_AUTH_KEY_ONLY'
+      : 'MISSING'
   const hasEnvCredentials = Boolean(
     process.env.TELEGRAM_API_ID && process.env.TELEGRAM_API_HASH,
   )
@@ -50,6 +89,8 @@ export async function getStatus() {
     hasStoredConfig,
     hasEnvCredentials,
     hasSessionFile,
+    hasAuthenticatedSession,
+    sessionState,
     readOnly,
   }
 }

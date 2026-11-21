@@ -70,9 +70,19 @@ cli.command('auth', {
       .describe(
         'Mark this session read-only: block send/group write commands at the CLI layer (local guard only; session file itself still has full account access)',
       ),
+    qr: z
+      .boolean()
+      .optional()
+      .describe(
+        'Log in by scanning a QR code in Telegram Mobile (Settings -> Devices -> Link Desktop Device)',
+      ),
   }),
   examples: [
     { description: 'Log in using the saved session or interactive prompts' },
+    {
+      options: { readOnly: true, qr: true },
+      description: 'Log in via QR code in read-only mode',
+    },
     { options: { force: true }, description: 'Force a fresh login flow' },
     {
       options: { readOnly: true },
@@ -80,7 +90,11 @@ cli.command('auth', {
     },
   ],
   run: async (c) =>
-    auth({ force: c.options.force, readOnly: c.options.readOnly }),
+    auth({
+      force: c.options.force,
+      readOnly: c.options.readOnly,
+      qr: c.options.qr,
+    }),
 })
 
 cli.command('setup', {

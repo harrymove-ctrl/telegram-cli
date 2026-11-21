@@ -1,7 +1,8 @@
 import readline from 'node:readline/promises'
 
 import { BaseTelegramClient } from '@mtcute/node'
-import { logOut, start } from '@mtcute/node/methods.js'
+import { getMe, logOut, signInQr, start } from '@mtcute/node/methods.js'
+import QRCode from 'qrcode'
 
 import {
   ensureStorageDir,
@@ -59,6 +60,59 @@ async function loginInteractive(tg: BaseTelegramClient) {
   }
 }
 
+async function promptPasswordOnDemand(
+  promptText = '2FA password (leave blank if none): ',
+): Promise<string> {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: true,
+  })
+  try {
+    return await promptWithInterface(rl, promptText, { hidden: true })
+  } finally {
+    rl.close()
+  }
+}
+
+async function loginQrInteractive(
+  tg: BaseTelegramClient,
+  forceLogin = false,
+) {
+  if (!forceLogin) {
+    try {
+      const existing = await getMe(tg)
+      await tg.notifyLoggedIn(existing.raw)
+      return existing
+    } catch {
+      // Not yet authorized; proceed to QR sign-in
+    }
+  }
+
+  return await signInQr(tg, {
+    onUrlUpdated: (url, expires) => {
+      void QRCode.toString(url, { type: 'terminal', small: true })
+        .then((qr) => {
+          process.stderr.write(
+            `\nOpen Telegram on your phone -> Settings -> Devices -> Link Desktop Device and scan this QR code (expires ${expires.toLocaleTimeString()}):\n\n${qr}\nOr open URL: ${url}\n`,
+          )
+        })
+        .catch(() => {
+          process.stderr.write(`\nOpen QR login URL in Telegram: ${url}\n`)
+        })
+    },
+    onQrScanned: () => {
+      process.stderr.write(
+        '\nQR code scanned! Completing DC migration and session authorization...\n',
+      )
+    },
+    password: () => promptPasswordOnDemand(),
+    invalidPasswordCallback: async () => {
+      console.error('Invalid 2FA password. Try again.')
+    },
+  })
+}
+
 async function requireStoredSession(tg: BaseTelegramClient): Promise<void> {
   await tg.prepare()
   const self = await tg.storage.self.fetch()
@@ -70,6 +124,7 @@ async function requireStoredSession(tg: BaseTelegramClient): Promise<void> {
 
 export async function authClient(options?: {
   forceLogin?: boolean
+  qr?: boolean
 }): Promise<BaseTelegramClient> {
   if (options?.forceLogin && client) {
     await client.destroy().catch(() => undefined)
@@ -89,7 +144,11 @@ export async function authClient(options?: {
       }
     }
 
-    await loginInteractive(tg)
+    if (options?.qr) {
+      await loginQrInteractive(tg, Boolean(options?.forceLogin))
+    } else {
+      await loginInteractive(tg)
+    }
     client = tg
     return tg
   } catch (error) {
