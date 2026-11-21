@@ -49,7 +49,9 @@ function hasAuthenticatedSelfRow(storageFile: string): boolean {
     ) => SqliteReadonlyHandle
     db = new BetterSqlite3(storageFile, { readonly: true, fileMustExist: true })
     const row = db
-      .prepare("SELECT 1 AS ok FROM key_value WHERE key = 'self' LIMIT 1")
+      .prepare(
+        "SELECT 1 AS ok FROM key_value WHERE key IN ('current_user', 'self') LIMIT 1",
+      )
       .get()
     return Boolean(row?.ok)
   } catch {
