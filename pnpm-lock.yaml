@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@mtcute/wasm':
-        specifier: ^0.32.0
-        version: 0.32.0
+        specifier: ^0.32.8
+        version: 0.32.8
       better-sqlite3:
         specifier: ^13.0.3
         version: 13.0.3
@@ -19,8 +19,8 @@ importers:
         version: 1.5.4
     devDependencies:
       '@mtcute/node':
-        specifier: ^0.32.0
-        version: 0.32.0
+        specifier: ^0.32.8
+        version: 0.32.8
       '@types/node':
         specifier: ^25.6.0
         version: 25.6.0
@@ -240,22 +240,22 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@fuman/io@0.0.21':
-    resolution: {integrity: sha512-8tSqmAUBWFdYrQUednl3I3VxLudaVXfyCqmPyiaDAXgmABTnjD2LvbXoJ7StrV9bvlrwVmwE+smwiKXSJtji0g==}
+  '@fuman/io@0.0.23':
+    resolution: {integrity: sha512-ln1hhwaX357gMK5GPjur2H8y/l2EM98VZXj/BweMwQJHqPSyL8GUIMZaom9dSfNf+n9ujSgqoHF0J5vkhSPMhQ==}
 
-  '@fuman/net@0.0.21':
-    resolution: {integrity: sha512-4PbDA2f6SfR5CtOs7omZNrrRh1X23KQBI0XmpL/r1fVd726H6+IfhDRxm/fgNKlLgMwe6pGbI/hzt8JU0y0sgw==}
+  '@fuman/net@0.0.23':
+    resolution: {integrity: sha512-qBLUeq6iC+bfIUeP1HPZ4Bqu9LECdKcZ8WsXtEpeXOl6B0tOAwg0gxWuh8/tV/vClUUnVBRoTxx/uMXZ9Hcfvg==}
 
-  '@fuman/node@0.0.21':
-    resolution: {integrity: sha512-5WS/REgANmPKoqWNAEkEeiw6DlU/7spCOGJ1s+p1eMetkwHlJFA5ZEeoIR9outisBD54EUZxAbAkWIdSbVXK5Q==}
+  '@fuman/node@0.0.23':
+    resolution: {integrity: sha512-rMYtFOZBy9FmrdDosP+n6zTnL7JPIYMYzj5PgsyiYZxltOO0rWj4U2P7qxZUWR2Ogvl6gg7Z2MAK5a245AhBHA==}
     peerDependencies:
       ws: ^8.18.1
     peerDependenciesMeta:
       ws:
         optional: true
 
-  '@fuman/utils@0.0.21':
-    resolution: {integrity: sha512-2N5bPK18uGgZRans+ZQ33SE+xSGj4BZNnJbSUnGdH/i4ADTdz/ziC/16Qy3/Jqzbrwr21IpuKObnELp8DDfkDQ==}
+  '@fuman/utils@0.0.23':
+    resolution: {integrity: sha512-dTpiCi5CLkqfpf2PvsvEyX4WP3dj3r8j/ffm0/H/Xi3atCI4O4wNWhN+nn8th6k24zC1+8ooJJdiSKylepJnag==}
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -279,26 +279,26 @@ packages:
       '@cfworker/json-schema':
         optional: true
 
-  '@mtcute/core@0.32.0':
-    resolution: {integrity: sha512-4x845rMveaVPHNi+mFOSFE5PWyxZfK0B8KsrVTkS7/wMihuMfRmVRum7c8d/pKzX1FsAEwVbeWSHnMlVnDx4gg==}
+  '@mtcute/core@0.32.8':
+    resolution: {integrity: sha512-X/CLzn1ageA8pXsFa5E/AuIq4svba4PYUeoamy9vSU569wvNBjWKMyQ8ehV04DJ2pymyYfYXgh52rsJDWqRNUQ==}
 
-  '@mtcute/file-id@0.32.0':
-    resolution: {integrity: sha512-afg/w6KKEn85xenuHVF4N8ysWy3vYZ7VF2sseUM3OXzLdZgVifRnNTdVUmU2kilpRYsR/B0Qvyu7Sif2N7H47A==}
+  '@mtcute/file-id@0.32.6':
+    resolution: {integrity: sha512-qnHRstP/aCxl7L/OG3ZuiiLYiDNALCcU8ZpeASZx+BvqRRvsJORNdG80jWy8yhdpqQmWtamoq2ywgzOvTuBmgA==}
 
-  '@mtcute/html-parser@0.32.0':
-    resolution: {integrity: sha512-ownOt5PdRTrrH4nU0KsDb+ENXxScEQoZf7fSEx64vcUQhFcIGYBHSXAH8pDN1/5JjCRXdlmJbi9lhD6F+iXbOA==}
+  '@mtcute/html-parser@0.32.8':
+    resolution: {integrity: sha512-wlbYNFNBE7v5PHVl9qpzFIEa95uqC4/JCajc+JuDDkZ1wcqsKqkYd8Xv5avN4fBZ8ac3j6YIRhj6n7o/o6Uxzw==}
 
-  '@mtcute/markdown-parser@0.32.0':
-    resolution: {integrity: sha512-wUIeh53AI4kAVgYuwhJf+omdMWJuULqNZRw2v4OcH9O3UVIuXdjtWOaMIr3zGpgJr6kZeki7KbSpTMGORP1uHg==}
+  '@mtcute/markdown-parser@0.32.8':
+    resolution: {integrity: sha512-6ae0hz2vOjaPgaukBkxoNUrBWYu6zmIxHTCccHnm7SN1ZmW3AnAfiZuFs0Ooc9Umb5LUhRJRPc3wQGU/mP1cEw==}
 
-  '@mtcute/node@0.32.0':
-    resolution: {integrity: sha512-Zt/qjJSTk9fI4VYd9Fz0w8ZtmGrArobvzzAEl+xbrkEMtFLuOrSQbTWNrZ/ITRR8tAESXUKtFE1/DifqKtOmMA==}
+  '@mtcute/node@0.32.8':
+    resolution: {integrity: sha512-iY3j7F+guRiWxuPa1sNe003VMb2l1WM9fS+y59Mo3F6NFIBRJ1GoWljUMN/nB+hV5yqcdEJh0eVqyY5sE9qp5g==}
 
-  '@mtcute/tl-runtime@0.32.0':
-    resolution: {integrity: sha512-9TdepMheddBismZDYVng9a0m+D4TqUPWcFc83JiArsXv+pmQiNWzXcoyoTUODUA35i6VOIdO5CuNd8hnKoZHpg==}
+  '@mtcute/tl-runtime@0.32.6':
+    resolution: {integrity: sha512-5Y31HHeH3GoZAqtPulh5L12OEvpk7prf1jPWkN0lN8ifCImCo+txqM1OA0yOnkpcsfNkUI4J3r3kuIAFTrl38g==}
 
-  '@mtcute/wasm@0.32.0':
-    resolution: {integrity: sha512-Hkp+h7OYN1GPpJ3HYeQfBM/OgvF0oWCuS2OY0shwigQmNJib2gX7fIH+KDd5UsRNuHptWASawMjKA+wLnGpSvw==}
+  '@mtcute/wasm@0.32.8':
+    resolution: {integrity: sha512-nT988eIWH0qQLNDXTTpLQkqx6TRc70dS1QR51zyocr6b4uPOpJ0c1SbZPrWhAoKvxT+wZjZP39oHDaoldiKlIg==}
 
   '@napi-rs/wasm-runtime@1.1.3':
     resolution: {integrity: sha512-xK9sGVbJWYb08+mTJt3/YV24WxvxpXcXtP6B172paPZ+Ts69Re9dAr7lKwJoeIx8OoeuimEiRZ7umkiUVClmmQ==}
@@ -654,8 +654,8 @@ packages:
   napi-build-utils@2.0.0:
     resolution: {integrity: sha512-GEbrYkbfF7MoNaoh2iGG84Mnf/WZfB0GdGEsM8wz7Expx/LlWf5U8t9nvJKXSp3qr5IsEbK04cBGhol/KwOsWA==}
 
-  node-abi@3.89.0:
-    resolution: {integrity: sha512-6u9UwL0HlAl21+agMN3YAMXcKByMqwGx+pq+P76vii5f7hTPtKDp08/H9py6DY+cfDw7kQNTGEj/rly3IgbNQA==}
+  node-abi@3.104.0:
+    resolution: {integrity: sha512-J2lVAHTQ8v1J7hl2k1eX70d/Fm+HE1EyUes2dOew59JgBlAW6NB7DABI8kdrgRPehhepJd18p1ivekA8BF7AOg==}
     engines: {node: '>=10'}
 
   node-addon-api@8.9.2:
@@ -767,6 +767,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.8.6:
+    resolution: {integrity: sha512-9lpSSU4Mly3mrtruwLs1eLK6+gzbzqeBFwRNjIjE+9LuDpWdYctrQlQ3ej1Ilgi7gknpsTRnPoLP8DpCHqHIJw==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   set-blocking@2.0.0:
     resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
 
@@ -791,8 +796,8 @@ packages:
     resolution: {integrity: sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ==}
     engines: {node: '>=0.10.0'}
 
-  tar-fs@2.1.4:
-    resolution: {integrity: sha512-mDAjwmZdh7LTT6pNleZ05Yt65HC3E+NiQzl672vQG38jIrehtJk/J3mNwIg+vShQPcLF/LV7CMnDW6vjj6sfYQ==}
+  tar-fs@2.1.5:
+    resolution: {integrity: sha512-OboTd8mmMhZDNPV+UjQcK9yKAatXu2aJ+r1w4im1Otd4M4fl2hwvdoXUxIYHFTHWK/3y3FarBP70v3vwmGlOxw==}
 
   tar-stream@2.2.0:
     resolution: {integrity: sha512-ujeqbceABgwMZxEJnk2HDY2DlnUZ+9oEcb1KzTVfYHio0UE6dG71n60d8D2I4qNvleWrrXpmjpt7vZeF1LnMZQ==}
@@ -1025,22 +1030,22 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@fuman/io@0.0.21':
+  '@fuman/io@0.0.23':
     dependencies:
-      '@fuman/utils': 0.0.21
+      '@fuman/utils': 0.0.23
 
-  '@fuman/net@0.0.21':
+  '@fuman/net@0.0.23':
     dependencies:
-      '@fuman/io': 0.0.21
-      '@fuman/utils': 0.0.21
+      '@fuman/io': 0.0.23
+      '@fuman/utils': 0.0.23
 
-  '@fuman/node@0.0.21':
+  '@fuman/node@0.0.23':
     dependencies:
-      '@fuman/io': 0.0.21
-      '@fuman/net': 0.0.21
-      '@fuman/utils': 0.0.21
+      '@fuman/io': 0.0.23
+      '@fuman/net': 0.0.23
+      '@fuman/utils': 0.0.23
 
-  '@fuman/utils@0.0.21': {}
+  '@fuman/utils@0.0.23': {}
 
   '@jridgewell/gen-mapping@0.3.13':
     dependencies:
@@ -1062,52 +1067,52 @@ snapshots:
     optionalDependencies:
       '@cfworker/json-schema': 4.1.1
 
-  '@mtcute/core@0.32.0':
+  '@mtcute/core@0.32.8':
     dependencies:
-      '@fuman/io': 0.0.21
-      '@fuman/net': 0.0.21
-      '@fuman/utils': 0.0.21
-      '@mtcute/file-id': 0.32.0
-      '@mtcute/tl-runtime': 0.32.0
+      '@fuman/io': 0.0.23
+      '@fuman/net': 0.0.23
+      '@fuman/utils': 0.0.23
+      '@mtcute/file-id': 0.32.6
+      '@mtcute/tl-runtime': 0.32.6
       '@types/events': 3.0.0
       long: 5.3.2
 
-  '@mtcute/file-id@0.32.0':
+  '@mtcute/file-id@0.32.6':
     dependencies:
-      '@fuman/utils': 0.0.21
-      '@mtcute/tl-runtime': 0.32.0
+      '@fuman/utils': 0.0.23
+      '@mtcute/tl-runtime': 0.32.6
       long: 5.3.2
 
-  '@mtcute/html-parser@0.32.0':
+  '@mtcute/html-parser@0.32.8':
     dependencies:
-      '@mtcute/core': 0.32.0
+      '@mtcute/core': 0.32.8
       htmlparser2: 10.1.0
       long: 5.3.2
 
-  '@mtcute/markdown-parser@0.32.0':
+  '@mtcute/markdown-parser@0.32.8':
     dependencies:
-      '@mtcute/core': 0.32.0
+      '@mtcute/core': 0.32.8
       long: 5.3.2
 
-  '@mtcute/node@0.32.0':
+  '@mtcute/node@0.32.8':
     dependencies:
-      '@fuman/net': 0.0.21
-      '@fuman/node': 0.0.21
-      '@fuman/utils': 0.0.21
-      '@mtcute/core': 0.32.0
-      '@mtcute/html-parser': 0.32.0
-      '@mtcute/markdown-parser': 0.32.0
-      '@mtcute/wasm': 0.32.0
+      '@fuman/net': 0.0.23
+      '@fuman/node': 0.0.23
+      '@fuman/utils': 0.0.23
+      '@mtcute/core': 0.32.8
+      '@mtcute/html-parser': 0.32.8
+      '@mtcute/markdown-parser': 0.32.8
+      '@mtcute/wasm': 0.32.8
       better-sqlite3: 12.11.1
     transitivePeerDependencies:
       - ws
 
-  '@mtcute/tl-runtime@0.32.0':
+  '@mtcute/tl-runtime@0.32.6':
     dependencies:
-      '@fuman/utils': 0.0.21
+      '@fuman/utils': 0.0.23
       long: 5.3.2
 
-  '@mtcute/wasm@0.32.0': {}
+  '@mtcute/wasm@0.32.8': {}
 
   '@napi-rs/wasm-runtime@1.1.3(@emnapi/core@1.9.2)(@emnapi/runtime@1.9.2)':
     dependencies:
@@ -1408,9 +1413,9 @@ snapshots:
 
   napi-build-utils@2.0.0: {}
 
-  node-abi@3.89.0:
+  node-abi@3.104.0:
     dependencies:
-      semver: 7.7.4
+      semver: 7.8.6
 
   node-addon-api@8.9.2: {}
 
@@ -1446,11 +1451,11 @@ snapshots:
       minimist: 1.2.8
       mkdirp-classic: 0.5.3
       napi-build-utils: 2.0.0
-      node-abi: 3.89.0
+      node-abi: 3.104.0
       pump: 3.0.4
       rc: 1.2.8
       simple-get: 4.0.1
-      tar-fs: 2.1.4
+      tar-fs: 2.1.5
       tunnel-agent: 0.6.0
 
   prettier@3.8.3: {}
@@ -1530,6 +1535,8 @@ snapshots:
 
   semver@7.7.4: {}
 
+  semver@7.8.6: {}
+
   set-blocking@2.0.0: {}
 
   simple-concat@1.0.1: {}
@@ -1556,7 +1563,7 @@ snapshots:
 
   strip-json-comments@2.0.1: {}
 
-  tar-fs@2.1.4:
+  tar-fs@2.1.5:
     dependencies:
       chownr: 1.1.4
       mkdirp-classic: 0.5.3

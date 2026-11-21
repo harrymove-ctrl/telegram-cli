@@ -29,6 +29,11 @@ export async function createClient(): Promise<BaseTelegramClient> {
     apiId,
     apiHash,
     storage: getStorageFile(),
+    initConnectionOptions: {
+      deviceModel: 'Mac Desktop',
+      systemVersion: 'macOS',
+      appVersion: '1.0.0',
+    },
   })
 }
 
@@ -94,11 +99,13 @@ async function loginQrInteractive(
       void QRCode.toString(url, { type: 'terminal', small: true })
         .then((qr) => {
           process.stderr.write(
-            `\nOpen Telegram on your phone -> Settings -> Devices -> Link Desktop Device and scan this QR code (expires ${expires.toLocaleTimeString()}):\n\n${qr}\nOr open URL: ${url}\n`,
+            `\nScan this QR code using Telegram Mobile ONLY (Settings -> Devices -> Link Desktop Device; do NOT click tg:// links in Mac Telegram Desktop, or run "telegram auth --read-only" for manual 5-digit code) [expires ${expires.toLocaleTimeString()}]:\n\n${qr}\n`,
           )
         })
         .catch(() => {
-          process.stderr.write(`\nOpen QR login URL in Telegram: ${url}\n`)
+          process.stderr.write(
+            '\nTerminal QR render failed. Run "telegram auth --read-only" to log in with phone + 5-digit manual code.\n',
+          )
         })
     },
     onQrScanned: () => {
