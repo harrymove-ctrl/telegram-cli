@@ -1,8 +1,13 @@
+import { mkdir, stat } from 'node:fs/promises'
+import { dirname, resolve as resolvePath } from 'node:path'
+
 import { Chat, Dialog, getMarkedPeerId } from '@mtcute/node'
 import {
+  downloadToFile,
   getChat,
   getChatMembers,
   getMe,
+  getMessages,
   getPeerDialogs,
   iterDialogs,
   iterHistory,
@@ -178,6 +183,7 @@ export async function readChat(
     replyToMessageId: number | null
     text: string
     hasMedia: boolean
+    mediaType: string | null
   }> = []
 
   let nextCursor: string | null = null
@@ -201,6 +207,7 @@ export async function readChat(
       replyToMessageId: message.replyToMessage?.id ?? null,
       text: message.text,
       hasMedia: message.media !== null,
+      mediaType: message.media ? String(message.media.type) : null,
     })
   }
 
@@ -215,6 +222,73 @@ export async function readChat(
     count: messages.length,
     nextCursor,
     messages,
+  }
+}
+
+export async function downloadMessageMedia(
+  chat: string,
+  messageId: number,
+  options: {
+    out: string
+    allowNonImage?: boolean
+  },
+) {
+  const tg = await getClient()
+  const peer = await resolvePeer(chat)
+  const [message] = await getMessages(tg, peer.inputPeer, [messageId])
+  if (!message) {
+    throw new Error(`Message ${messageId} not found in chat ${peer.displayName} (${peer.id}).`)
+  }
+  if (!message.media) {
+    throw new Error(`Message ${messageId} in ${peer.displayName} has no downloadable media.`)
+  }
+  const media = message.media
+  if (
+    media.type !== 'photo' &&
+    media.type !== 'document' &&
+    media.type !== 'video' &&
+    media.type !== 'audio' &&
+    media.type !== 'voice' &&
+    media.type !== 'sticker'
+  ) {
+    throw new Error(`Media type "${media.type}" is not a downloadable file location.`)
+  }
+  const mediaType = media.type
+  const mimeType =
+    'mimeType' in media && typeof media.mimeType === 'string'
+      ? media.mimeType
+      : mediaType === 'photo'
+        ? 'image/jpeg'
+        : ''
+  const isImageLike =
+    mediaType === 'photo' ||
+    (mediaType === 'document' && /^image\//i.test(mimeType)) ||
+    mediaType === 'sticker'
+  if (!options.allowNonImage && !isImageLike) {
+    throw new Error(
+      `Message ${messageId} media is "${mediaType}" (${mimeType || 'no mime'}), not an image; pass --allow-non-image to download non-image files.`,
+    )
+  }
+
+  const resolvedOut = resolvePath(options.out)
+  await mkdir(dirname(resolvedOut), { recursive: true })
+  await downloadToFile(tg, resolvedOut, media)
+  const fileStat = await stat(resolvedOut)
+
+  return {
+    ok: true,
+    chat: {
+      id: String(peer.id),
+      name: peer.displayName,
+      type: peer.type,
+    },
+    messageId: message.id,
+    date: message.date.toISOString(),
+    text: message.text,
+    mediaType,
+    mimeType: mimeType || null,
+    filePath: resolvedOut,
+    bytes: fileStat.size,
   }
 }
 

@@ -12,6 +12,7 @@ export { resolvePeer, resolveTarget } from './telegram/resolve.js'
 export { listContacts } from './telegram/contacts.js'
 export { listFolders } from './telegram/folders.js'
 export {
+  downloadMessageMedia,
   getMemberCount,
   listChats,
   markRead,

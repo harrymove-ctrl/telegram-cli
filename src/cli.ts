@@ -6,6 +6,7 @@ import {
   auth,
   buildDigest,
   createChatGroup,
+  downloadMessageMedia,
   getMemberCount,
   getStatus,
   listContacts,
@@ -29,6 +30,7 @@ import {
 const NEGATIVE_CHAT_ID_PREFIX = 'tg-chat-id:'
 const CHAT_ARG_COMMANDS = new Set([
   'read',
+  'download-media',
   'mark-read',
   'draft',
   'send',
@@ -240,6 +242,34 @@ cli.command('read', {
     readChat(c.args.chat, {
       limit: c.options.limit,
       cursor: c.options.cursor,
+    }),
+})
+
+cli.command('download-media', {
+  description: 'Download a read-only media attachment (photo or image) from a Telegram message.',
+  hint: 'Strictly read-only. Prefer numeric chat ID from "telegram chats" plus a message ID from "telegram read".',
+  args: z.object({
+    chat: z.string().describe(CHAT_TARGET_DESCRIPTION),
+    messageId: z.coerce.number().int().positive().describe('Numeric message ID from "telegram read"'),
+  }),
+  options: z.object({
+    out: z.string().min(1).describe('Local output file path for the downloaded media'),
+    allowNonImage: z
+      .boolean()
+      .optional()
+      .describe('Allow downloading non-image attachments (video, audio, generic document)'),
+  }),
+  examples: [
+    {
+      args: { chat: '-1001234567890', messageId: 12345 },
+      options: { out: '/tmp/chart.jpg' },
+      description: 'Download a chart photo from a Telegram channel message',
+    },
+  ],
+  run: async (c) =>
+    downloadMessageMedia(c.args.chat, c.args.messageId, {
+      out: c.options.out,
+      allowNonImage: c.options.allowNonImage,
     }),
 })
 
