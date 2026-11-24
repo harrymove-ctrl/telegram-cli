@@ -143,3 +143,22 @@ test('batch-download-media handles empty and already-cached files offline', asyn
     try { unlinkSync(specPath) } catch {}
   }
 })
+
+test('batch-crawl exposes spec-file option and fails closed on missing spec file', async () => {
+  const { stdout } = await execFileAsync(process.execPath, [
+    CLI_PATH,
+    'batch-crawl',
+    '--help',
+  ])
+  assert.ok(stdout.includes('--spec-file'))
+  await assert.rejects(
+    execFileAsync(process.execPath, [
+      CLI_PATH,
+      'batch-crawl',
+      '--spec-file',
+      '/tmp/non-existent-gd-batch-spec-999999.json',
+      '--format',
+      'json',
+    ]),
+  )
+})

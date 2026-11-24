@@ -37,6 +37,7 @@ export interface BatchCrawlSpec {
   matchAllFolders?: boolean
   includeAllChats?: boolean
   maxDialogs?: number
+  archived?: 'keep' | 'exclude' | 'only'
   dialogStrategy?: 'auto' | 'peer_dialogs' | 'iter_dialogs'
   peerDialogsChunkSpacingMs?: number
   cursors?: Record<string, BatchCrawlCursorInput>
@@ -47,6 +48,7 @@ export interface BatchCrawlSpec {
   messagesPerChannel?: number
   newChatMessagesLimit?: number
   maxReads?: number
+  reserveNonPrimaryReads?: number
   readConcurrency?: number
   readSpacingMs?: number
   allowZeroRpcSingleMessage?: boolean
@@ -308,6 +310,57 @@ async function readJsonSpecFile<T>(specFile: string): Promise<T> {
   return JSON.parse(raw) as T
 }
 
+export function rankTelegramFolderPriority(title: string): number {
+  const clean = normalizeFolderKey(title)
+  if (/^(?:trading[\s_-]*2|gold|xau|v[àa]ng)\b/i.test(clean)) return 0
+  if (/^(?:trading|forex|fx|crypto|k[èe]o)\b/i.test(clean)) return 1
+  if (/\b(?:news|tin[\s_-]*t[ứu]c)\b/i.test(clean)) return 2
+  if (/^web3[\s_-]*pack\b/i.test(clean)) return 3
+  return 4
+}
+
+export function shouldIncludeFolderDialog(opts: {
+  matcherMatched: boolean
+  excludeArchived: boolean
+  excludeRead: boolean
+  isArchived: boolean
+  isUnread: boolean
+  isExplicitPeer: boolean
+}): boolean {
+  if (!opts.matcherMatched) return false
+  if (opts.excludeArchived && opts.isArchived && !opts.isExplicitPeer) {
+    return false
+  }
+  if (opts.excludeRead && !opts.isUnread && !opts.isExplicitPeer) {
+    return false
+  }
+  return true
+}
+
+export function selectFairBatchHistoryJobs<T>(
+  primaryPending: T[],
+  secondaryPending: T[],
+  maxReads: number,
+  reserveNonPrimaryReads = 0,
+): T[] {
+  const safeMax = Math.max(0, Math.floor(Number(maxReads) || 0))
+  if (safeMax === 0) return []
+  const safeReserve = Math.max(
+    0,
+    Math.min(
+      Math.floor(safeMax / 2),
+      Math.floor(Number(reserveNonPrimaryReads) || 0),
+    ),
+  )
+  const reservedSecondaryCount =
+    safeReserve > 0 ? Math.min(safeReserve, secondaryPending.length) : 0
+  const primaryCap = Math.max(0, safeMax - reservedSecondaryCount)
+  const selectedPrimary = primaryPending.slice(0, primaryCap)
+  const remainingBudget = Math.max(0, safeMax - selectedPrimary.length)
+  const selectedSecondary = secondaryPending.slice(0, remainingBudget)
+  return [...selectedPrimary, ...selectedSecondary]
+}
+
 export async function batchCrawlFromSpecFile(specFile: string) {
   const spec = await readJsonSpecFile<BatchCrawlSpec>(specFile)
   return batchCrawl(spec)
@@ -383,12 +436,21 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
         matchedEntries.push({ title: sum.title, id: sum.id, filter: f })
       }
     }
+    matchedEntries.sort(
+      (a, b) =>
+        rankTelegramFolderPriority(a.title) -
+        rankTelegramFolderPriority(b.title),
+    )
   }
 
   const maxDialogs = Math.max(
     50,
-    Math.min(1000, Number(spec.maxDialogs ?? 400) || 400),
+    Math.min(1500, Number(spec.maxDialogs ?? 400) || 400),
   )
+  const archivedMode: 'keep' | 'exclude' | 'only' =
+    spec.archived === 'exclude' || spec.archived === 'only'
+      ? spec.archived
+      : 'keep'
   const includeAllChats = spec.includeAllChats === true
   const peerChunkSpacingMs = Math.max(
     100,
@@ -491,6 +553,9 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
       const normalized = normalizeDialogFilterForMatching(entry.filter)
       const excludeRead =
         entry.filter._ === 'dialogFilter' && Boolean(entry.filter.excludeRead)
+      const excludeArchived =
+        entry.filter._ === 'dialogFilter' &&
+        Boolean(entry.filter.excludeArchived)
       const explicitPeerSet = new Set(
         entry.filter._ !== 'dialogFilterDefault'
           ? [...entry.filter.includePeers, ...entry.filter.pinnedPeers].map(
@@ -517,6 +582,7 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
       return {
         title: entry.title,
         excludeRead,
+        excludeArchived,
         explicitPeerSet,
         matcher,
       }
@@ -524,7 +590,10 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
 
     let dialogsSeen = 0
     try {
-      for await (const dialog of iterDialogs(tg, { limit: maxDialogs })) {
+      for await (const dialog of iterDialogs(tg, {
+        limit: maxDialogs,
+        archived: archivedMode,
+      })) {
         dialogsSeen += 1
         const id = String(dialog.peer.id)
         const summary = summarizeDialog(dialog)
@@ -532,11 +601,15 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
         summaryById.set(id, summary)
 
         for (const fm of folderMatchers) {
-          if (!fm.matcher(dialog)) continue
           if (
-            fm.excludeRead &&
-            !summary.isUnread &&
-            !fm.explicitPeerSet.has(dialog.peer.id)
+            !shouldIncludeFolderDialog({
+              matcherMatched: fm.matcher(dialog),
+              excludeArchived: fm.excludeArchived,
+              excludeRead: fm.excludeRead,
+              isArchived: Boolean(dialog.isArchived),
+              isUnread: summary.isUnread,
+              isExplicitPeer: fm.explicitPeerSet.has(dialog.peer.id),
+            })
           ) {
             continue
           }
@@ -603,11 +676,21 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
   const allowZeroRpc = spec.allowZeroRpcSingleMessage !== false
   let deltaSkippedCount = 0
 
+  const reserveNonPrimaryReads = Math.max(
+    0,
+    Math.min(
+      Math.floor(maxReads / 2),
+      Number(spec.reserveNonPrimaryReads ?? 0) || 0,
+    ),
+  )
+
   if (!spec.skipMessageReads && !floodWaitDetected && maxReads > 0) {
-    // Preserve folder priority order (e.g. trading 2 -> trading -> news -> Web3 Pack -> all_chats)
-    const orderedIds: string[] = []
+    // Preserve folder priority order (trading 2 -> trading -> news -> Web3 Pack -> all_chats)
+    // while optionally reserving fair read slots for non-primary folders (Web3 Pack, news, all_chats)
+    // so high-burst Gold/Trading ticks never starve Web3 or unfoldered crypto groups.
+    const orderedEntries: Array<{ chatId: string; isSecondary: boolean }> = []
     const seenOrdered = new Set<string>()
-    const enqueueList = (list: BatchChatSummary[]) => {
+    const enqueueList = (list: BatchChatSummary[], isSecondary: boolean) => {
       // Within each folder: unread/changed and newer chats first
       const sorted = [...list].sort((a, b) => {
         const unreadDiff = (b.isUnread ? 1 : 0) - (a.isUnread ? 1 : 0)
@@ -619,34 +702,44 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
       for (const item of sorted) {
         if (seenOrdered.has(item.id)) continue
         seenOrdered.add(item.id)
-        orderedIds.push(item.id)
+        orderedEntries.push({ chatId: item.id, isSecondary })
       }
     }
 
+    const isPrimaryFolderTitle = (title: string) =>
+      /^(?:trading(?:[\s_-]*\d+)?|gold|xau|v[àa]ng|forex|fx|k[èe]o)\b/i.test(
+        normalizeFolderKey(title),
+      )
+
     for (const entry of matchedEntries) {
-      enqueueList(folderChats[entry.title] || [])
+      enqueueList(
+        folderChats[entry.title] || [],
+        !isPrimaryFolderTitle(entry.title),
+      )
     }
     if (includeAllChats) {
-      enqueueList(allChats)
+      enqueueList(allChats, true)
     }
     // Also ensure any explicit onlyReadChatIds or forceReadChatIds are visited even if outside folder slices
     if (onlyReadSet) {
       for (const id of onlyReadSet) {
         if (!seenOrdered.has(id)) {
           seenOrdered.add(id)
-          orderedIds.push(id)
+          orderedEntries.push({ chatId: id, isSecondary: false })
         }
       }
     }
 
-    const historyQueue: Array<{
+    type HistoryJob = {
       chatId: string
       dialog: Dialog
       limit: number
       minId: number
-    }> = []
+    }
+    const primaryPending: HistoryJob[] = []
+    const secondaryPending: HistoryJob[] = []
 
-    for (const chatId of orderedIds) {
+    for (const { chatId, isSecondary } of orderedEntries) {
       if (excludeSet.has(chatId)) continue
       if (onlyReadSet && !onlyReadSet.has(chatId)) continue
       const dialog = dialogById.get(chatId)
@@ -687,8 +780,6 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
         continue
       }
 
-      if (historyQueue.length >= maxReads) continue
-
       const isBrandNew = !cursor
       const limit = isBrandNew
         ? newChatLimit
@@ -696,13 +787,25 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
           ? Math.min(30, Math.max(defaultLimit, summary.unreadCount + 2))
           : defaultLimit
 
-      historyQueue.push({
+      const job: HistoryJob = {
         chatId,
         dialog,
         limit,
         minId: !isForced && prevProcessedId > 0 ? prevProcessedId : 0,
-      })
+      }
+      if (isSecondary) {
+        secondaryPending.push(job)
+      } else {
+        primaryPending.push(job)
+      }
     }
+
+    const historyQueue: HistoryJob[] = selectFairBatchHistoryJobs(
+      primaryPending,
+      secondaryPending,
+      maxReads,
+      reserveNonPrimaryReads,
+    )
 
     // Bounded worker pool over the single open MTProto connection (zero cold spawns, zero resolvePeer RPCs).
     let nextIdx = 0
