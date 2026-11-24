@@ -19,6 +19,28 @@ export {
   readChat,
   unreadChats,
 } from './telegram/chats.js'
+export {
+  batchCrawl,
+  batchCrawlFromSpecFile,
+  batchDownloadMedia,
+  batchDownloadMediaFromSpecFile,
+  batchMarkRead,
+  batchMarkReadFromSpecFile,
+  canDeltaSkipDialog,
+  extractFloodWaitInfo,
+  isValidChannelMarkReadChatId,
+} from './telegram/batch.js'
+export type {
+  BatchChatReadResult,
+  BatchChatSummary,
+  BatchCrawlCursorInput,
+  BatchCrawlSpec,
+  BatchDownloadMediaItem,
+  BatchDownloadMediaSpec,
+  BatchMarkReadItem,
+  BatchMarkReadSpec,
+  BatchMessageItem,
+} from './telegram/batch.js'
 export type { AttachmentOptions, AttachmentType } from './telegram/media.js'
 export {
   buildDigest,

@@ -22,6 +22,9 @@ test('telegram --help lists core and daily triage commands', async () => {
     'unread',
     'draft',
     'send',
+    'batch-crawl',
+    'batch-mark-read',
+    'batch-download-media',
   ]) {
     assert.ok(stdout.includes(cmd), `Expected help output to list ${cmd}`)
   }
@@ -67,4 +70,76 @@ test('negative chat IDs pass argument parsing for read and search', async () => 
     '--help',
   ])
   assert.ok(readHelp.includes('Read a page of messages from a chat'))
+})
+
+test('batch-mark-read skips non-channel IDs fail-closed offline without network calls', async () => {
+  const { writeFileSync, unlinkSync } = await import('node:fs')
+  const os = await import('node:os')
+  const specPath = path.join(os.tmpdir(), `tg-batch-mark-read-test-${process.pid}.json`)
+  writeFileSync(
+    specPath,
+    JSON.stringify({
+      items: [
+        { chatId: '123456789', maxId: 50 },
+        { chatId: '-987654', maxId: 50 },
+        { chatId: '-1001234567890', maxId: 0 },
+      ],
+    }),
+    'utf8',
+  )
+  try {
+    const { stdout } = await execFileAsync(process.execPath, [
+      CLI_PATH,
+      'batch-mark-read',
+      '--spec-file',
+      specPath,
+      '--format',
+      'json',
+    ])
+    const parsed = JSON.parse(stdout)
+    assert.equal(parsed.ok, true)
+    assert.equal(parsed.markedCount, 0)
+    assert.equal(parsed.skippedCount, 3)
+    assert.equal(parsed.floodWaitStopped, false)
+  } finally {
+    unlinkSync(specPath)
+  }
+})
+
+test('batch-download-media handles empty and already-cached files offline', async () => {
+  const { writeFileSync, unlinkSync } = await import('node:fs')
+  const os = await import('node:os')
+  const cachedFile = path.join(os.tmpdir(), `tg-cached-chart-${process.pid}.jpg`)
+  const specPath = path.join(os.tmpdir(), `tg-batch-dl-test-${process.pid}.json`)
+  writeFileSync(cachedFile, Buffer.from([0xff, 0xd8, 0xff, 0xd9]))
+  writeFileSync(
+    specPath,
+    JSON.stringify({
+      items: [
+        { chatId: '-1001234567890', messageId: 42, out: cachedFile },
+        { chatId: '', messageId: 0, out: '' },
+      ],
+    }),
+    'utf8',
+  )
+  try {
+    const { stdout } = await execFileAsync(process.execPath, [
+      CLI_PATH,
+      'batch-download-media',
+      '--spec-file',
+      specPath,
+      '--format',
+      'json',
+    ])
+    const parsed = JSON.parse(stdout)
+    assert.equal(parsed.cachedCount, 1)
+    assert.equal(parsed.downloadedCount, 0)
+    assert.equal(parsed.failedCount, 1)
+    assert.equal(parsed.items[0].ok, true)
+    assert.equal(parsed.items[0].cached, true)
+    assert.equal(parsed.items[1].ok, false)
+  } finally {
+    try { unlinkSync(cachedFile) } catch {}
+    try { unlinkSync(specPath) } catch {}
+  }
 })

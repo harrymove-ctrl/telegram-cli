@@ -4,6 +4,9 @@ import { Cli, z } from 'incur'
 import {
   addChatMembers,
   auth,
+  batchCrawlFromSpecFile,
+  batchDownloadMediaFromSpecFile,
+  batchMarkReadFromSpecFile,
   buildDigest,
   createChatGroup,
   downloadMessageMedia,
@@ -407,6 +410,63 @@ cli.command('mark-read', {
       .describe('Only mark history up to this message ID'),
   }),
   run: async (c) => markRead(c.args.chat, { maxId: c.options.maxId }),
+})
+
+cli.command('batch-crawl', {
+  description:
+    'Crawl multiple Telegram folders and read delta messages over one single read-only MTProto session.',
+  hint: 'Strictly read-only. Pass a JSON spec file via --spec-file with folders, cursors, maxReads, and readConcurrency to eliminate per-chat cold starts and redundant dialog scans.',
+  options: z.object({
+    specFile: z
+      .string()
+      .min(1)
+      .describe('Path to JSON BatchCrawlSpec file describing folders and cursors'),
+  }),
+  examples: [
+    {
+      options: { specFile: '/tmp/batch-crawl-spec.json' },
+      description: 'Crawl trading 2 and trading folders in one MTProto session',
+    },
+  ],
+  run: async (c) => batchCrawlFromSpecFile(c.options.specFile),
+})
+
+cli.command('batch-mark-read', {
+  description:
+    'Mark multiple broadcast or supergroup channels as read over one single MTProto session with FLOOD_WAIT fail-closed pacing.',
+  hint: 'Only accepts -100... channel/supergroup IDs with positive maxId.',
+  options: z.object({
+    specFile: z
+      .string()
+      .min(1)
+      .describe('Path to JSON BatchMarkReadSpec file containing items and spacingMs'),
+  }),
+  examples: [
+    {
+      options: { specFile: '/tmp/batch-mark-read-spec.json' },
+      description: 'Mark processed trading channels read over one connection',
+    },
+  ],
+  run: async (c) => batchMarkReadFromSpecFile(c.options.specFile),
+})
+
+cli.command('batch-download-media', {
+  description:
+    'Download multiple read-only media attachments (images/charts) over one single MTProto session.',
+  hint: 'Strictly read-only. Skips already cached output files and halts immediately on FLOOD_WAIT.',
+  options: z.object({
+    specFile: z
+      .string()
+      .min(1)
+      .describe('Path to JSON BatchDownloadMediaSpec file containing download targets'),
+  }),
+  examples: [
+    {
+      options: { specFile: '/tmp/batch-download-media-spec.json' },
+      description: 'Download fresh trading chart photos over one connection',
+    },
+  ],
+  run: async (c) => batchDownloadMediaFromSpecFile(c.options.specFile),
 })
 
 cli.command('draft', {
