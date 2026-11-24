@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  isImageDocumentMedia,
   rankTelegramFolderPriority,
   selectFairBatchHistoryJobs,
   shouldIncludeFolderDialog,
@@ -108,4 +109,12 @@ test('selectFairBatchHistoryJobs guarantees secondary Web3/crypto slots, caps re
 
   // Zero maxReads returns empty fail-closed
   assert.deepEqual(selectFairBatchHistoryJobs(primary, secondary, 0, 8), [])
+})
+
+test('isImageDocumentMedia allows photo, image/* PNG documents, and octet-stream .png charts while blocking PDFs/videos', () => {
+  assert.equal(isImageDocumentMedia('photo', 'image/jpeg', null), true)
+  assert.equal(isImageDocumentMedia('document', 'image/png', 'XLMUSD_2026-11-24_17-54-28_b44e2.png'), true)
+  assert.equal(isImageDocumentMedia('document', 'application/octet-stream', 'BTC_H4_CHART.PNG'), true)
+  assert.equal(isImageDocumentMedia('document', 'application/pdf', 'report.pdf'), false)
+  assert.equal(isImageDocumentMedia('video', 'video/mp4', 'clip.mp4'), false)
 })

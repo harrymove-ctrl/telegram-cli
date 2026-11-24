@@ -15,6 +15,7 @@ import {
   resolveUser,
 } from '@mtcute/node/methods.js'
 
+import { isImageDocumentMedia } from './batch.js'
 import { getClient } from './client.js'
 import { iterCommonChats } from './common-chats.js'
 import { resolvePeer } from './resolve.js'
@@ -260,10 +261,11 @@ export async function downloadMessageMedia(
       : mediaType === 'photo'
         ? 'image/jpeg'
         : ''
-  const isImageLike =
-    mediaType === 'photo' ||
-    (mediaType === 'document' && /^image\//i.test(mimeType)) ||
-    mediaType === 'sticker'
+  const fileName =
+    'fileName' in media && typeof media.fileName === 'string'
+      ? media.fileName
+      : ''
+  const isImageLike = isImageDocumentMedia(mediaType, mimeType, fileName)
   if (!options.allowNonImage && !isImageLike) {
     throw new Error(
       `Message ${messageId} media is "${mediaType}" (${mimeType || 'no mime'}), not an image; pass --allow-non-image to download non-image files.`,
@@ -287,6 +289,7 @@ export async function downloadMessageMedia(
     text: message.text,
     mediaType,
     mimeType: mimeType || null,
+    fileName: fileName || null,
     filePath: resolvedOut,
     bytes: fileStat.size,
   }

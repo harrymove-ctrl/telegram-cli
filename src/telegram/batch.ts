@@ -84,6 +84,7 @@ export interface BatchMessageItem {
   hasMedia: boolean
   mediaType: string | null
   mimeType: string | null
+  fileName: string | null
 }
 
 export interface BatchChatReadResult {
@@ -182,6 +183,27 @@ function extractMessageMimeType(message: MtMessage): string | null {
   return null
 }
 
+function extractMessageFileName(message: MtMessage): string | null {
+  const media = message.media
+  if (!media) return null
+  if ('fileName' in media && typeof media.fileName === 'string' && media.fileName.trim()) {
+    return media.fileName.trim()
+  }
+  return null
+}
+
+export function isImageDocumentMedia(
+  mediaType: string | null | undefined,
+  mimeType: string | null | undefined,
+  fileName?: string | null,
+): boolean {
+  const mt = String(mediaType || '').toLowerCase()
+  if (mt === 'photo' || mt === 'sticker') return true
+  if (mt !== 'document') return false
+  if (/^image\//i.test(String(mimeType || '').trim())) return true
+  return /\.(?:png|jpe?g|webp|gif)$/i.test(String(fileName || '').trim())
+}
+
 function formatMessage(message: MtMessage): BatchMessageItem {
   return {
     id: message.id,
@@ -194,6 +216,7 @@ function formatMessage(message: MtMessage): BatchMessageItem {
     hasMedia: message.media !== null,
     mediaType: message.media ? String(message.media.type) : null,
     mimeType: extractMessageMimeType(message),
+    fileName: extractMessageFileName(message),
   }
 }
 
@@ -1006,7 +1029,7 @@ export async function batchMarkRead(spec: BatchMarkReadSpec) {
   const rawItems = Array.isArray(spec?.items) ? spec.items : []
   const maxPerCycle = Math.max(
     1,
-    Math.min(80, Number(spec?.maxPerCycle ?? 45) || 45),
+    Math.min(120, Number(spec?.maxPerCycle ?? 60) || 60),
   )
   const spacingMs = Math.max(
     0,
@@ -1235,10 +1258,15 @@ export async function batchDownloadMedia(spec: BatchDownloadMediaSpec) {
             : media.type === 'photo'
               ? 'image/jpeg'
               : ''
-        const isImageLike =
-          media.type === 'photo' ||
-          (media.type === 'document' && /^image\//i.test(mimeType)) ||
-          media.type === 'sticker'
+        const fileName =
+          'fileName' in media && typeof media.fileName === 'string'
+            ? media.fileName
+            : ''
+        const isImageLike = isImageDocumentMedia(
+          media.type,
+          mimeType,
+          fileName,
+        )
         if (!item.allowNonImage && !isImageLike) {
           failedCount += 1
           items.push({
