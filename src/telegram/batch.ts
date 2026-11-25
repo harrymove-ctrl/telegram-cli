@@ -333,10 +333,29 @@ async function readJsonSpecFile<T>(specFile: string): Promise<T> {
   return JSON.parse(raw) as T
 }
 
+const BLOCKED_PERSONAL_OR_RAC_FOLDER_RE =
+  /^(?:personal|private|dm|dms|direct[\s_-]*messages?|saved[\s_-]*messages?|family|friends|work|rac|r[áa]c|trash|spam|scam|quarantine|k[èe]o[\s_-]*r[áa]c|trash[\s_-]*signals?)$/i
+
+export function isBlockedPersonalOrRacFolderTitle(title: string): boolean {
+  const clean = normalizeFolderKey(title)
+  if (!clean) return false
+  return BLOCKED_PERSONAL_OR_RAC_FOLDER_RE.test(clean)
+}
+
+export function isPrimaryTradingOrGoodsFolderTitle(title: string): boolean {
+  const clean = normalizeFolderKey(title)
+  if (!clean || isBlockedPersonalOrRacFolderTitle(clean)) return false
+  return /^(?:good|goods|vip[\s_-]*goods?|top[\s_-]*goods?|(?:(?:group|groups|nh[óo]m|folder)[\s_-]+)?trading(?:[\s_-]*\d+)?|gold|golds|xau|v[àa]ng|forex|fx|k[èe]o)\b/i.test(
+    clean,
+  )
+}
+
 export function rankTelegramFolderPriority(title: string): number {
   const clean = normalizeFolderKey(title)
-  if (/^(?:trading[\s_-]*2|gold|xau|v[àa]ng)\b/i.test(clean)) return 0
-  if (/^(?:trading|forex|fx|crypto|k[èe]o)\b/i.test(clean)) return 1
+  if (isBlockedPersonalOrRacFolderTitle(clean)) return 99
+  if (/^(?:good|goods|vip[\s_-]*goods?|top[\s_-]*goods?)\b/i.test(clean)) return -1
+  if (/^(?:(?:(?:group|groups|nh[óo]m|folder)[\s_-]+)?trading[\s_-]*2|gold|golds|xau|v[àa]ng)\b/i.test(clean)) return 0
+  if (/^(?:(?:(?:group|groups|nh[óo]m|folder)[\s_-]+)?trading|forex|fx|crypto|k[èe]o)\b/i.test(clean)) return 1
   if (/\b(?:news|tin[\s_-]*t[ứu]c)\b/i.test(clean)) return 2
   if (/^web3[\s_-]*pack\b/i.test(clean)) return 3
   return 4
@@ -444,7 +463,7 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
       })
       if (hit) {
         const sum = folderSummary(hit)
-        if (!seenFolderIds.has(sum.id)) {
+        if (!isBlockedPersonalOrRacFolderTitle(sum.title) && !seenFolderIds.has(sum.id)) {
           seenFolderIds.add(sum.id)
           matchedEntries.push({ title: sum.title, id: sum.id, filter: hit })
         }
@@ -454,6 +473,7 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
     for (const f of folderResult.filters) {
       if (f._ === 'dialogFilterDefault') continue
       const sum = folderSummary(f)
+      if (isBlockedPersonalOrRacFolderTitle(sum.title)) continue
       if (!seenFolderIds.has(sum.id)) {
         seenFolderIds.add(sum.id)
         matchedEntries.push({ title: sum.title, id: sum.id, filter: f })
@@ -729,15 +749,10 @@ export async function batchCrawl(spec: BatchCrawlSpec = {}) {
       }
     }
 
-    const isPrimaryFolderTitle = (title: string) =>
-      /^(?:trading(?:[\s_-]*\d+)?|gold|xau|v[àa]ng|forex|fx|k[èe]o)\b/i.test(
-        normalizeFolderKey(title),
-      )
-
     for (const entry of matchedEntries) {
       enqueueList(
         folderChats[entry.title] || [],
-        !isPrimaryFolderTitle(entry.title),
+        !isPrimaryTradingOrGoodsFolderTitle(entry.title),
       )
     }
     if (includeAllChats) {

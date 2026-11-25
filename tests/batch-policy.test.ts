@@ -1,26 +1,41 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  isBlockedPersonalOrRacFolderTitle,
   isImageDocumentMedia,
+  isPrimaryTradingOrGoodsFolderTitle,
   rankTelegramFolderPriority,
   selectFairBatchHistoryJobs,
   shouldIncludeFolderDialog,
 } from '../src/telegram/batch.ts'
 
-test('rankTelegramFolderPriority orders trading 2 -> trading -> news -> Web3 Pack -> other', () => {
-  const folders = ['Random', 'Web3 Pack', 'Macro News', 'trading', 'trading 2']
+test('rankTelegramFolderPriority orders goods (#1) -> trading 2 -> trading -> news -> Web3 Pack -> other while hard-blocking Personal & rac', () => {
+  const folders = ['Random', 'Web3 Pack', 'Macro News', 'trading', 'trading 2', 'goods']
   const sorted = [...folders].sort(
     (a, b) => rankTelegramFolderPriority(a) - rankTelegramFolderPriority(b),
   )
   assert.deepEqual(sorted, [
+    'goods',
     'trading 2',
     'trading',
     'Macro News',
     'Web3 Pack',
     'Random',
   ])
+  assert.equal(rankTelegramFolderPriority('goods'), -1)
+  assert.equal(rankTelegramFolderPriority('good'), -1)
   assert.equal(rankTelegramFolderPriority('crypto'), 1)
   assert.equal(rankTelegramFolderPriority('gold'), 0)
+
+  for (const primary of ['goods', 'good', 'trading', 'trading 1', 'trading 2', 'Trading 3', 'gold']) {
+    assert.equal(isPrimaryTradingOrGoodsFolderTitle(primary), true, `Expected primary=true for ${primary}`)
+    assert.equal(isBlockedPersonalOrRacFolderTitle(primary), false)
+  }
+  for (const blocked of ['Personal', 'work', 'private', 'DM', 'rac', 'rác', 'trash']) {
+    assert.equal(isBlockedPersonalOrRacFolderTitle(blocked), true, `Expected blocked=true for ${blocked}`)
+    assert.equal(isPrimaryTradingOrGoodsFolderTitle(blocked), false)
+    assert.equal(rankTelegramFolderPriority(blocked), 99)
+  }
 })
 
 test('shouldIncludeFolderDialog recovers archived Web3 Pack dialogs while enforcing excludeArchived and excludeRead with explicitPeer override', () => {
